@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:atvpraticaapi/atvpraticaapi.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -41,43 +43,72 @@ Future<List<dynamic>> pegarApi() async {
 }
 
 Future<void> main(List<String> arguments) async {
-  stdout.write(
-      "Digite:\n1 para LISTAR TUDO\n2 para PESQUISAR\n3 para DELETAR\n4 para SAIR:\n");
+  List<Cachorro> dadosFiltrados = [];
 
-  int opcao = int.parse(stdin.readLineSync()!);
+  if (dadosFiltrados.isEmpty) {
+    try {
+      List<dynamic> dados = await pegarApi();
 
-  while (opcao != 4) {
-    if (opcao == 1) {
-      try {
-        List<dynamic> dados = await pegarApi();
+      for (var dado in dados) {
+        String id = dado["id"];
+        //print(id);
 
-        List<Cachorro> dadosFiltrados = [];
+        String nome = dado["attributes"]["name"];
+        //print(nome);
 
-        for (var dado in dados) {
-          String id = dado["id"];
-          //print(id);
+        String descricao = dado["attributes"]["description"];
+        //print(descricao);
 
-          String nome = dado["attributes"]["name"];
-          //print(nome);
+        int vidaMaxima = dado["attributes"]["life"]["max"];
+        int vidaMinima = dado["attributes"]["life"]["min"];
 
-          String descricao = dado["attributes"]["description"];
-          //print(descricao);
+        Cachorro c = Cachorro(id, nome, descricao, vidaMaxima, vidaMinima);
 
-          int vidaMaxima = dado["attributes"]["life"]["max"];
-          int vidaMinima = dado["attributes"]["life"]["min"];
-
-          Cachorro c = Cachorro(id, nome, descricao, vidaMaxima, vidaMinima);
-
-          dadosFiltrados.add(c);
-        }
-
-        //print(dadosFiltrados);
-
-        salvarDados(dadosFiltrados);
-        mostrarLista(dadosFiltrados);
-      } catch (erro) {
-        print(erro);
+        dadosFiltrados.add(c);
       }
+
+      salvarDados(dadosFiltrados);
+      //print(dadosFiltrados);
+    } catch (erro) {
+      print(erro);
+    }
+  }
+
+  while (true) {
+    print("\n");
+    stdout.write(
+        "Digite:\n1 para LISTAR TUDO\n2 para PESQUISAR\n3 para DELETAR\n4 para SAIR:\n");
+
+    int opcao = int.parse(stdin.readLineSync()!);
+    if (opcao == 1) {
+      mostrarLista(dadosFiltrados);
+    }
+
+    if (opcao == 2) {
+      stdout.write("Digite o nome do cachorro que deseja pesquisar: ");
+      String nomePesquisa = (stdin.readLineSync()!).toLowerCase();
+
+      final arquivo = File('./backup_api.json');
+
+      List<dynamic> dadosLidos = jsonDecode(arquivo.readAsStringSync());
+
+      //print(dadosLidos);
+
+      for (var dado in dadosLidos) {
+        if (dado["nome"].toString().toLowerCase() == nomePesquisa) {
+          print("\n");
+          print("ID: ${dado["id"]}");
+          print("NOME: ${dado["nome"]}");
+          print("Descrição: ${dado["descricao"]}");
+          print("Vida Máxima: ${dado["vidaMaxima"]}");
+          print("Vida Mínima: ${dado["vidaMinima"]}");
+        }
+      }
+    }
+
+    if (opcao == 4) {
+      print("Saindo...");
+      break;
     }
   }
 }

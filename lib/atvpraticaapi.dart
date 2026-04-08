@@ -14,8 +14,7 @@ class Cachorro {
       "nome": nome,
       "descricao": descricao,
       "vidaMaxima": vidaMaxima,
-      "vidaMinina": vidaMinima
+      "vidaMinima": vidaMinima
     };
-
   }
 }
