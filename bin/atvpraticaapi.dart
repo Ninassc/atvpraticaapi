@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:atvpraticaapi/atvpraticaapi.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -45,7 +43,23 @@ Future<List<dynamic>> pegarApi() async {
 Future<void> main(List<String> arguments) async {
   List<Cachorro> dadosFiltrados = [];
 
-  if (dadosFiltrados.isEmpty) {
+  final arquivo = File('./backup_api.json');
+
+  if (arquivo.existsSync()) {
+    List<dynamic> dadosExistentes = jsonDecode(arquivo.readAsStringSync());
+
+    for (var dado in dadosExistentes) {
+      String id = dado["id"];
+      String nome = dado["nome"];
+      String descricao = dado["descricao"];
+      int vidaMaxima = dado["vidaMaxima"];
+      int vidaMinima = dado["vidaMinima"];
+
+      Cachorro c = Cachorro(id, nome, descricao, vidaMaxima, vidaMinima);
+      dadosFiltrados.add(c);
+    }
+
+  } else {
     try {
       List<dynamic> dados = await pegarApi();
 
@@ -102,6 +116,22 @@ Future<void> main(List<String> arguments) async {
           print("Descrição: ${dado["descricao"]}");
           print("Vida Máxima: ${dado["vidaMaxima"]}");
           print("Vida Mínima: ${dado["vidaMinima"]}");
+          break;
+        }
+      }
+    }
+
+    if (opcao == 3) {
+      if (dadosFiltrados.isNotEmpty) {
+        stdout.write("Digite um NOME para deletar: ");
+        String nomeDeletar = (stdin.readLineSync()!).toLowerCase();
+        for (var dado in dadosFiltrados) {
+          if (dado.nome.toLowerCase() == nomeDeletar) {
+            dadosFiltrados.remove(dado);
+            salvarDados(dadosFiltrados);
+            print("Cachorro apagado da lista!");
+            break;
+          }
         }
       }
     }
@@ -111,4 +141,6 @@ Future<void> main(List<String> arguments) async {
       break;
     }
   }
+
+  salvarDados(dadosFiltrados);
 }
